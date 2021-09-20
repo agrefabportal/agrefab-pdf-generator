@@ -2,23 +2,24 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 
 class Pdf {
-    /**
-     * Generate PDF documents
-     */
-    constructor() {
-
+    doc;
+    name = 'Untitled';
+    get filePath() {
+        return `${this.name}.pdf`
     }
     /**
-     * Create test document
-     * @param {string} filePath Path where the file will be saved. Relative to the working directory.
+     * The class represents a pdf document. Saving the pdf creates a new file on the local filesystem. It overwrites an existing file of the same name.
      */
-    create(name, data) {
-        const doc = new PDFDocument();
-        doc.pipe(fs.createWriteStream(`${name}.pdf`));
-        doc.font('fonts/roboto/Roboto-Regular.ttf')
-            .fontSize(25)
-            .text(data, 100, 100);
-        doc.end();
+    constructor(name) {
+        if (name != undefined) this.name = name;
+        this.doc = new PDFDocument({ font: 'fonts/roboto/Roboto-Regular.ttf' })
+    }
+    /**
+     * Save document as a file in the working directory. Overwrites an existing file of the same name
+     */
+    save() {
+        this.doc.pipe(fs.createWriteStream(this.filePath));
+        this.doc.end();
     }
 }
 module.exports = new Pdf();
