@@ -1,6 +1,6 @@
 {
     "name": "agrefab-pdf-generator",
-    "version": "0.0.01",
+    "version": "0.0.1",
     "description": "NodeJS library for creating PDF documents.",
     "main": "index.js",
     "scripts": {
@@ -14,7 +14,7 @@
         "agrefab"
     ],
     "author": "kevin@agrefab.com",
-    "license": "ISC",
+    "license": "MIT",
     "bugs": {
         "url": "https://github.com/agrefabportal/agrefab-pdf-generator/issues"
     },
