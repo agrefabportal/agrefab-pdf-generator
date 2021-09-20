@@ -18,5 +18,8 @@
     "bugs": {
         "url": "https://github.com/agrefabportal/agrefab-pdf-generator/issues"
     },
-    "homepage": "https://github.com/agrefabportal/agrefab-pdf-generator#readme"
+    "homepage": "https://github.com/agrefabportal/agrefab-pdf-generator#readme",
+    "dependencies": {
+        "pdfkit": "^0.12.3"
+    }
 }
