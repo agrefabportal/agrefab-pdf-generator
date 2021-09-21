@@ -3,15 +3,28 @@ const PDFGenerator = require('./index.js');
 const fs = require('fs');
 
 (async function main() {
-    testPdfGenerator_createsFile();
-    testFileSystemNamingConvention();
+    // testPdfGenerator_createsFile();
+    // testFileSystemNamingConvention();
+    addText_createsAFileWithText();
 })().catch(error => console.error(error));
+/**
+ * Test that the pdf generator creates a file on the local filesystem
+ */
+async function addText_createsAFileWithText() {
+    let pdf1 = new PDFGenerator('testPdfGenerator_createsFile1');
+    await pdf1.saveEmptyFile();
+    let pdf2 = new PDFGenerator('testPdfGenerator_createsFile2');
+    await pdf2.saveTextFile('🌮');
+    assert.equal(fs.statSync('testPdfGenerator_createsFile1.pdf').size < fs.statSync('testPdfGenerator_createsFile2.pdf').size, true, 'The empty file is not smaller than the file with text. Check that there is text in testPdfGenerator_createsFile2.pdf.');
+    deleteFile(pdf1.filePath);
+    deleteFile(pdf2.filePath);
+}
 /**
  * Test that the pdf generator creates a file on the local filesystem
  */
 async function testPdfGenerator_createsFile() {
     let pdf = new PDFGenerator('testPdfGenerator_createsFile');
-    pdf.save().then(deleteFile(pdf.filePath));
+    pdf.saveEmptyFile().then(deleteFile(pdf.filePath));
 }
 /**
  * Test filesystem naming conventions.
@@ -22,7 +35,7 @@ async function testFileSystemNamingConvention() {
     let name = 'testFileSystemNamingConvention';
     let pdf2 = new PDFGenerator(name);
     assert.equal(pdf2.filePath, name + '.pdf', `File naming convention does not match. Expected filename + .pdf. The pdf has a file path of ${pdf2.filePath}`);
-    pdf2.save().then(deleteFile(pdf2.filePath));
+    pdf2.saveEmptyFile().then(deleteFile(pdf2.filePath));
 }
 /**
  * Delete file. This inherently also checks if the file exists and other errors in the delete process.
