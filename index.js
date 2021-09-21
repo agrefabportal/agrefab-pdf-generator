@@ -1,7 +1,8 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
+const { resolve } = require('path');
 
-class Pdf {
+class PDFGenerator {
     doc;
     name = 'Untitled';
     get filePath() {
@@ -17,9 +18,16 @@ class Pdf {
     /**
      * Save document as a file in the working directory. Overwrites an existing file of the same name
      */
-    save() {
-        this.doc.pipe(fs.createWriteStream(this.filePath));
-        this.doc.end();
+    async save() {
+        return new Promise((resolve, reject => {
+            try {
+                this.doc.pipe(fs.createWriteStream(this.filePath));
+                this.doc.end();
+                resolve();
+            } catch {
+                reject();
+            }
+        }).bind(this.filePath));
     }
 }
-module.exports = new Pdf();
+module.exports = PDFGenerator;

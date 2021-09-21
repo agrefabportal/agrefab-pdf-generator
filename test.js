@@ -1,19 +1,24 @@
 const assert = require('assert')
-const pdf = require('./index.js');
+const PDFGenerator = require('./index.js');
 const fs = require('fs');
 
 (async function main() {
     testPdfGenerator_createsFile();
 })().catch(error => console.error(error));
-
-function testPdfGenerator_createsFile() {
-    let name = '########TEST########';
-    let path = name + '.pdf';
-    pdf.save();
-    fs.stat(path, err => assert.equal(err, null, 'PDF generator did not create a file. If a file was created in the working directory, check the naming convention matches this test.'));
-    fs.unlink(path, (_) => {
-        fs.stat(path, function (err, stat) {
-            assert.equal(err.code, 'ENOENT', 'File was not deleted');
-        });
+/**
+ * Test that the pdf generator creates a file on the local filesystem
+ */
+async function testPdfGenerator_createsFile() {
+    let pdf = new PDFGenerator('testPdfGenerator_createsFile');
+    pdf.save().then(deleteFile(pdf.filePath));
+}
+/**
+ * Delete file. This inherently also checks if the file exists and other errors in the delete process.
+ * @param {string} filePath Path to the file including its name and extension
+ */
+function deleteFile(filePath) {
+    fs.unlink(filePath, (err) => {
+        assert.notEqual(err?.code, 'ENOENT', `There was no file found with the following name: ${filePath}`);
+        assert.equal(err, null);
     });
 }
