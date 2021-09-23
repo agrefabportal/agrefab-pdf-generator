@@ -1,50 +1,61 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 
+/**
+ * PDFGenerator library specially designed to make guide documents.
+ */
 class PDFGenerator {
     doc;
-    name = 'Untitled';
-    get filePath() {
-        return `${this.name}.pdf`
-    }
+    fileName = 'Untitled';
+    get filePath() { return `${this.fileName}.pdf` }
+    marginTop = 72;
+    marginBottom = 72;
+    marginLeft = 72;
+    marginRight = 72;
+    title = 'Untitled';
+    body = '';
+    numberId = '';
+    revisionDate = '';
+    effective = '';
+    replaces = '';
+    version = '';
     /**
      * The class represents a pdf document. Saving the pdf creates a new file on the local filesystem. It overwrites an existing file of the same name.
      */
-    constructor(name) {
-        if (name != undefined) this.name = name;
-        this.doc = new PDFDocument({ font: 'fonts/roboto/Roboto-Regular.ttf' })
+    constructor(fileName) {
+        if (fileName != undefined) this.fileName = fileName;
+        this.doc = new PDFDocument({
+            font: 'fonts/roboto/Roboto-Regular.ttf'
+        });
     }
     /**
      * Save document as a file in the working directory. Overwrites an existing file of the same name
+     * @param {String} options Options for creating a guide.
      */
-    async saveTextFile(text) {
-        return new Promise(function (resolve, reject) {
-            try {
-                let writeStream = fs.createWriteStream(this.filePath);
-                writeStream.on('finish', function () { resolve(); });
-                this.doc.text(text, 50, 50);
-                this.doc.pipe(writeStream);
-                this.doc.end();
-            } catch (error) {
-                reject(error);
-            }
-        }.bind({ filePath: this.filePath, doc: this.doc }));
+    async saveGuide(text) {
+        this.body = text;
+        return this.#save();
     }
     /**
-     * Save document as a file in the working directory. Overwrites an existing file of the same name
-    * BUG: Resolves before file is finished c 
-    */
-    async saveEmptyFile() {
+     * Make all configurations before saving.
+     */
+    async #save() {
         return new Promise(function (resolve, reject) {
             try {
                 let writeStream = fs.createWriteStream(this.filePath);
                 writeStream.on('finish', function () { resolve(); });
+                this.doc
+                    .fontSize(13)
+                    .text(this.title)
+                    .fontSize(11)
+                    .text(this.body);
                 this.doc.pipe(writeStream);
                 this.doc.end();
             } catch (error) {
                 reject(error);
             }
-        }.bind({ filePath: this.filePath, doc: this.doc }));
+        }.bind(this));
     }
 }
 module.exports = PDFGenerator;
+
