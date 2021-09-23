@@ -10,7 +10,7 @@ var MOCK_TEXT_LONG = `1. Introduction\n1.1 Purpose\nTitle:\nAssurance GDS\nRevis
         testAddText_createsAFileWithText(),
         testAddHeader_createsHeaderOnEveryPage()
     ]).then(value => {
-        console.log('🏖  All tests passed. ✅')
+        console.log('🏖  All tests passed. ✅');
     });
 })().catch(error => console.error(error));
 /**
