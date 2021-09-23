@@ -48,7 +48,7 @@ async function testFileSystemNamingConvention() {
  */
 async function testAddHeader_createsHeaderOnEveryPage() {
     let pdf = new PDFGenerator('testPdfGenerator_createsFile');
-    await pdf.saveGuide(MOCK_TEXT_LONG)
+    await pdf.saveGuide(MOCK_TEXT_LONG, 'n.bass@agrefab.com')
         .then(deleteFile(pdf.filePath));
 }
 /**
