@@ -5,9 +5,9 @@ var MOCK_TEXT_LONG = `1. Introduction\n1.1 Purpose\nTitle:\nAssurance GDS\nRevis
 
 (async function main() {
     Promise.all([
-        testPdfGenerator_createsFile(),
-        testFileSystemNamingConvention(),
-        testAddText_createsAFileWithText(),
+        // testPdfGenerator_createsFile(),
+        // testFileSystemNamingConvention(),
+        // testAddText_createsAFileWithText(),
         testAddHeader_createsHeaderOnEveryPage()
     ]).then(value => {
         console.log('🏖  All tests passed. ✅')
@@ -48,7 +48,7 @@ async function testFileSystemNamingConvention() {
  */
 async function testAddHeader_createsHeaderOnEveryPage() {
     let pdf = new PDFGenerator('testPdfGenerator_createsFile');
-    await pdf.saveGuide(MOCK_TEXT_LONG)
+    await pdf.saveGuide(MOCK_TEXT_LONG, 'n.bass@agrefab.com')
         .then(deleteFile(pdf.filePath));
 }
 /**
@@ -56,9 +56,9 @@ async function testAddHeader_createsHeaderOnEveryPage() {
  * @param {string} filePath Path to the file including its name and extension
  */
 function deleteFile(filePath) {
-    fs.unlink(filePath, (err) => {
-        assert.notEqual(err?.code, 'ENOENT', `There was no file found with the following name: ${filePath}`);
-        assert.equal(err, null);
-    });
-    console.log(`📄🗑 ${filePath} was created and deleted. Comment out the inner contents of @function deleteFile() to keep the files.`)
+    // fs.unlink(filePath, (err) => {
+    //     assert.notEqual(err?.code, 'ENOENT', `There was no file found with the following name: ${filePath}`);
+    //     assert.equal(err, null);
+    // });
+    // console.log(`📄🗑 ${filePath} was created and deleted. Comment out the inner contents of @function deleteFile() to keep the files.`)
 }
