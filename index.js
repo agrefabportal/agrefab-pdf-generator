@@ -3,23 +3,20 @@ const fs = require('fs');
 const { throws } = require('assert');
 
 /**
- * PDFGenerator library specially designed to make guide documents.
+ * PDFGenerator library specially designed to make Agrefab guide documents.
  */
 class PDFGenerator {
     doc;
     fileName = 'Untitled';
     get filePath() { return `${this.fileName}.pdf` }
-    marginTop = 72;
-    marginBottom = 72;
-    marginLeft = 72;
-    marginRight = 72;
     title = 'Untitled';
-    body = '';
+    introduction = '';
+    steps = [];
     author = '';
     approvedBy = '';
     numberId = '';
     revisionDate = '';
-    effective = '';
+    effectiveDate = '';
     replaces = '';
     version = '';
     /**
@@ -29,16 +26,30 @@ class PDFGenerator {
         if (fileName != undefined) this.fileName = fileName;
         this.doc = new PDFDocument({
             bufferPages: true,
-            font: 'fonts/roboto/Roboto-Regular.ttf'
+            font: 'fonts/roboto/Roboto-Regular.ttf',
+            margins: {
+                top: 122,
+                bottom: 50,
+                left: 72,
+                right: 72
+            }
         });
     }
     /**
      * Save document as a file in the working directory. Overwrites an existing file of the same name
-     * @param {String} options Options for creating a guide.
+     * @param {Object} options Fields
      */
-    async saveGuide(text, author) {
-        this.body = text;
-        this.author = author;
+    async saveGuide(options) {
+        if (options.introduction) this.introduction = options.introduction;
+        if (options.title) this.title = options.title;
+        if (options.steps) this.steps = options.steps;
+        if (options.author) this.author = options.author;
+        if (options.numberId) this.numberId = options.numberId;
+        if (options.revisionDate) this.revisionDate = options.revisionDate.substring(0, 15);
+        if (options.effectiveDate) this.effectiveDate = options.effectiveDate.substring(0, 15);
+        if (options.approvedBy) this.approvedBy = options.approvedBy;
+        if (options.replaces) this.replaces = options.replaces;
+        if (options.version) this.version = options.version;
         return this.#save();
     }
     /**
@@ -49,31 +60,82 @@ class PDFGenerator {
             try {
                 let writeStream = fs.createWriteStream(this.filePath);
                 writeStream.on('finish', function () { resolve(); });
+                // Main document body text
                 this.doc
-                    .fontSize(13)
-                    .text(this.title)
+                    .fontSize(15)
+                    .text('1. Introduction')
                     .fontSize(11)
-                    .text(this.body);
+                    .text(this.introduction)
+                    .text(' ')
+                    .fontSize(15)
+                    .text('2. Procedure')
+                    .fontSize(11)
+                for (let index = 0; index < this.steps.length; index++) {
+                    this.doc.text(`Step ${index + 1}`)
+                    this.doc.text(this.steps[index])
+                }
+                // Header and footer
                 let pages = this.doc.bufferedPageRange();
                 for (let i = 0; i < pages.count; i++) {
                     this.doc.switchToPage(i);
                     let oldBottomMargin = this.doc.page.margins.bottom;
                     this.doc.page.margins.bottom = 0 //HACK: Have to remove bottom margin in order to write into it. https://stackoverflow.com/a/59960316/5178499
+                    let marginTop = 32;
+                    let marginBottom = 72;
+                    let marginLeft = 72;
+                    let marginRight = 72;
                     this.doc
+                        .fontSize(12)
+                        .text('Agrefab LLC', marginLeft, marginTop)
                         .fontSize(9)
-                        .text(`Page: ${i + 1} of ${pages.count}`, 72, 32, { align: 'right' })
-                        .fontSize(10)
-                        .text('Agrefab LLC')
-                        .fontSize(9)
-                        .text(`41-720 KUMUHAU ST 96795 WAIMANALO HAWAII`)
+                        .text(`41-720 KUMUHAU ST, WAIMANALO HI 96795`)
                         .fontSize(8)
-                        .text(`Number: Title: Revision Date: Effective:`)
-                        .text(`${this.numberId} ${this.revisionDate} ${this.effective} ${this.replaces} ${this.version}`)
-                        .text(`Number: Title: Revision Date: Effective:`,
-                            72, this.doc.page.height - (oldBottomMargin / 2) - 12
+                        .text(`Number:`, marginLeft, marginTop + 42)
+                        .fontSize(9)
+                        .text(this.numberId, marginLeft, marginTop + 54)
+                        .fontSize(8)
+                        .text(`Title:`, marginLeft + 122, marginTop + 42)
+                        .fontSize(9)
+                        .text(this.title, marginLeft + 122, marginTop + 54)
+                        .fontSize(8)
+                        .text(`Revision Date:`, marginLeft + 322, marginTop + 42)
+                        .fontSize(9)
+                        .text(this.revisionDate, marginLeft + 322, marginTop + 54)
+                        .fontSize(8)
+                        .text(`Effective:`, marginLeft + 398, marginTop + 42)
+                        .fontSize(9)
+                        .text(this.effectiveDate, marginLeft + 398, marginTop + 54)
+                        .fontSize(8)
+                        .text(`Author:`,
+                            marginLeft, this.doc.page.height - (oldBottomMargin / 2) - 12
                         )
-                        .text(`${this.author} ${this.approvedBy} ${this.replaces} ${this.version} ${this.version}`,
-                            72, this.doc.page.height - (oldBottomMargin / 2)
+                        .fontSize(9)
+                        .text(`${this.author}`,
+                            marginLeft, this.doc.page.height - (oldBottomMargin / 2)
+                        )
+                        .fontSize(8)
+                        .text(`Approved By:`,
+                            marginLeft + 128, this.doc.page.height - (oldBottomMargin / 2) - 12
+                        )
+                        .fontSize(9)
+                        .text(`${this.approvedBy}`,
+                            marginLeft + 128, this.doc.page.height - (oldBottomMargin / 2)
+                        )
+                        .fontSize(8)
+                        .text(`Replaces:`,
+                            marginLeft + 256, this.doc.page.height - (oldBottomMargin / 2) - 12
+                        )
+                        .fontSize(9)
+                        .text(`${this.replaces}`,
+                            marginLeft + 264, this.doc.page.height - (oldBottomMargin / 2)
+                        )
+                        .fontSize(8)
+                        .text(`Version:`,
+                            marginLeft + 378, this.doc.page.height - (oldBottomMargin / 2) - 12
+                        )
+                        .fontSize(9)
+                        .text(`${this.version}`,
+                            marginLeft + 378, this.doc.page.height - (oldBottomMargin / 2)
                         )
                         .fontSize(9)
                         .text(`Page: ${i + 1} of ${pages.count}`,

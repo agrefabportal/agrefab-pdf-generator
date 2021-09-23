@@ -5,14 +5,35 @@ var MOCK_TEXT_LONG = `1. Introduction\n1.1 Purpose\nTitle:\nAssurance GDS\nRevis
 
 (async function main() {
     Promise.all([
-        testPdfGenerator_createsFile(),
-        testFileSystemNamingConvention(),
-        testAddText_createsAFileWithText(),
-        testAddHeader_createsHeaderOnEveryPage()
+        // testPdfGenerator_createsFile(),
+        // testFileSystemNamingConvention(),
+        // testAddText_createsAFileWithText(),
+        // testAddHeader_createsHeaderOnEveryPage(),
+        testSaveGuide_formatsRequiredFields(),
     ]).then(value => {
         console.log('🏖  All tests passed. ✅');
     });
 })().catch(error => console.error(error));
+/**
+ * Test pdf generator creates a file on the local filesystem. @function deleteFile contains test assertions.
+ */
+async function testSaveGuide_formatsRequiredFields() {
+    let pdf = new PDFGenerator('testSaveGuide_formatsRequiredFieldsCorrectly');
+    let introduction = 'Describe the rationale for this particular document (ensure, describe, control). State the intention/objective of the process/procedure.';
+    let steps = [
+        'Instructions for step 1',
+        'Instructions for step 2'
+    ];
+    let numberId = 'SOP-ALL-001';
+    let revisionDate = 'Wed Sep 01 2021 1W8:e2d4:S5e4p 01 GMT-1000 (Hawaii-2A0le2u1ti1a8n:24:54 Standard Time)';
+    let effectiveDate = 'Wed Sep 01 2021 1W8:e2d4:S5e4p 01 GMT-1000 (Hawaii-2A0le2u1ti1a8n:24:54 Standard Time)';
+    let approvedBy = 'kevin@agrefab.com';
+    let author = 'kevin@agrefab.com';
+    let replaces = '';
+    let version = 1;
+    pdf.saveGuide({ introduction, steps, author, numberId, revisionDate, effectiveDate, approvedBy, replaces, version })
+    // .then(deleteFile(pdf.filePath));
+}
 /**
  * Test pdf generator creates a file on the local filesystem. @function deleteFile contains test assertions.
  */
