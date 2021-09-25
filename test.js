@@ -8,7 +8,7 @@ var MOCK_TEXT_LONG = `1. Introduction\n1.1 Purpose\nTitle:\nAssurance GDS\nRevis
         testPdfGenerator_createsFile(),
         testFileSystemNamingConvention(),
         testAddText_createsAFileWithText(),
-        testAddHeader_createsHeaderOnEveryPage(),
+        testSaveGuide_createsHeaderAndFooterOnEachPage(),
         testSaveGuide_formatsRequiredFields(),
     ]).then(value => {
         console.log('🏖  All tests passed. ✅');
@@ -37,34 +37,30 @@ async function testSaveGuide_formatsRequiredFields() {
 /**
  * Make sure there is a header and footer on every page.
  */
-async function testAddHeader_createsHeaderOnEveryPage() {
-    let pdf = new PDFGenerator('testAddHeader_createsHeaderOnEveryPage');
+async function testSaveGuide_createsHeaderAndFooterOnEachPage() {
+    let pdf = new PDFGenerator('testSaveGuide_createsHeaderAndFooterOnEachPage');
     await pdf.saveGuide({ introduction: MOCK_TEXT_LONG, author: 'n.bass@agrefab.com', numberId: 'SOP-ALL-001' });
     await checkForHeaderAndFooter();
     await deleteFile(pdf.filePath);
-}
-/**
- * Helper function that goes along with @function testAddHeader_createsHeaderOnEveryPage
- * @returns Promise
- */
-async function checkForHeaderAndFooter() {
-    return new Promise((resolve, reject) => {
-        let pdfParser = new PDFParser();
-        pdfParser.on('pdfParser_dataError', errData => reject(errData.parserError));
-        pdfParser.on('pdfParser_dataReady', async pdfData => {
-            pdfData.formImage.Pages.forEach((element, index) => {
-                let matchesPerPage = element.Texts.filter((element, index, array) => {
-                    let text = decodeURIComponent(element.R[0].T);
-                    if (text.includes('n.bass@agrefab.com') || text.includes('SOP-ALL-001')) {
-                        return element;
-                    }
+    async function checkForHeaderAndFooter() {
+        return new Promise((resolve, reject) => {
+            let pdfParser = new PDFParser();
+            pdfParser.on('pdfParser_dataError', errData => reject(errData.parserError));
+            pdfParser.on('pdfParser_dataReady', async pdfData => {
+                pdfData.formImage.Pages.forEach((element, index) => {
+                    let matchesPerPage = element.Texts.filter((element, index, array) => {
+                        let text = decodeURIComponent(element.R[0].T);
+                        if (text.includes('n.bass@agrefab.com') || text.includes('SOP-ALL-001')) {
+                            return element;
+                        }
+                    });
+                    assert.equal(matchesPerPage.length, 2, `There was no text matching header and footer on page ${index + 1}. There was a total of ${matchesPerPage.length} matches.`)
+                    resolve();
                 });
-                assert.equal(matchesPerPage.length, 2, `There was no text matching header and footer on page ${index + 1}. There was a total of ${matchesPerPage.length} matches.`)
-                resolve();
             });
+            pdfParser.loadPDF('testSaveGuide_createsHeaderAndFooterOnEachPage.pdf');
         });
-        pdfParser.loadPDF('testAddHeader_createsHeaderOnEveryPage.pdf');
-    });
+    }
 }
 /**
  * Test pdf generator creates a file on the local filesystem. @function deleteFile contains test assertions.
