@@ -40,16 +40,16 @@ class PDFGenerator {
      * @param {Object} options Fields
      */
     async saveGuide(options) {
-        if (options.introduction) this.introduction = options.introduction;
-        if (options.title) this.title = options.title;
-        if (options.steps) this.steps = options.steps;
-        if (options.author) this.author = options.author;
-        if (options.numberId) this.numberId = options.numberId;
-        if (options.revisionDate) this.revisionDate = options.revisionDate.substring(0, 15);
-        if (options.effectiveDate) this.effectiveDate = options.effectiveDate.substring(0, 15);
-        if (options.approvedBy) this.approvedBy = options.approvedBy;
-        if (options.replaces) this.replaces = options.replaces;
-        if (options.version) this.version = options.version;
+        if (options?.introduction) this.introduction = options.introduction;
+        if (options?.title) this.title = options.title;
+        if (options?.steps) this.steps = options.steps;
+        if (options?.author) this.author = options.author;
+        if (options?.numberId) this.numberId = options.numberId;
+        if (options?.revisionDate) this.revisionDate = options.revisionDate.substring(0, 15);
+        if (options?.effectiveDate) this.effectiveDate = options.effectiveDate.substring(0, 15);
+        if (options?.approvedBy) this.approvedBy = options.approvedBy;
+        if (options?.replaces) this.replaces = options.replaces;
+        if (options?.version) this.version = options.version;
         return this.#save();
     }
     /**
