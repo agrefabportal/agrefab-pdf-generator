@@ -1,6 +1,7 @@
 const assert = require('assert')
 const PDFGenerator = require('./index.js');
 const fs = require('fs');
+const PDFParser = require('pdf2json');
 var MOCK_TEXT_LONG = `1. Introduction\n1.1 Purpose\nTitle:\nAssurance GDS\nRevision Date:\nEffective:\nMM/DD/YY\n    Describe the rationale for this particular document (ensure, describe, control). State the intention/objective of the process/procedure.\nNote: You know you’ve written a solid purpose statement when you can combine the policy statement and the purpose to form a logical what (policy) and why (purpose).\n1.2 Scope\nWhen and to whom the process/procedure applies.\nWho is affected, which areas, which activities, what are the limits (parameters for applying process/procedure).\n1.3 Roles\nList the role and functions of anyone involved in the process/procedure.\nUse verbs and nouns to describe the functions\n1.4 Definitions and Acronyms\nList definitions and acronyms that need to be defined in order to ensure proper interpretation of the process or procedure.\n1.5 References\n1.5.1 Standards\nList the standards (Audit, governing body etc) used to create the process/procedure.\n1.5.2 Forms\nList any logs or records associated with this procedure/document.\n    1.5.3 Equipment\n2. Procedure\n2.1\nAuthor\n[AUTHOR]\nProcedure\nApproved by:\n[APPROVER]\nReplaces: Version\nPage 1 of 3\n    1.0\n    \n    Company Logo Address\nNumber:\nSOP-ALL-\n2.2\n2.3\n3. Review\nTitle:\nAssurance GDS\nRevision Date:\nEffective:\nMM/DD/YY\n    Desc.\nStep 1 , Step 2 .\nProcedure\nDesc.\nStep 1 . Step 2 .\nProcedure\nDesc.\nStep 1 . Step 2 .\n    4. Nomenclature of Documents PROC - DEPT - #\nPROC:\nDOC- (Documents) Programs, Policies etc\nFORM- Logs, anything that needs filling in/completion SOP- Standard Operating Procedures\nWI- Work Instructions\nHACCP- HACCP Documents\n#: (Number)\nThree digit number, if documents are related use same first digit and sequential third digits.\nHACCP documents are numbered as follows and can include a letter to signify the specific flow chart.\n100 Product Description\nAuthor Approved by: Replaces: Version\n[AUTHOR] [APPROVER]\n    1.0\nPage 2 of 3\n    \nCompany Logo Address\nNumber: Title:\nSOP-ALL- Assurance GDS\n200 Hazard Analysis 300 Flow Chart\n400 HACCP Plan\nDOCUMENT NUMERATION:\n0##- Miscellaneous\n100- Quality Control\n200- Sanitation\n300- GMP/continuous improvement 400- Allergen Control\n500- Foreign Material Control 600- Recall and Traceability 700- Food Defense/ Emergency 800- Product Protection\n900- Supplier Approval\nRevision Date:\nEffective:\nMM/DD/YY\n    \n\n\n                    `;
 (async function main() {
     Promise.all([
@@ -17,7 +18,7 @@ var MOCK_TEXT_LONG = `1. Introduction\n1.1 Purpose\nTitle:\nAssurance GDS\nRevis
  * Test pdf generator creates a file on the local filesystem. @function deleteFile contains test assertions.
  */
 async function testSaveGuide_formatsRequiredFields() {
-    let pdf = new PDFGenerator('testSaveGuide_formatsRequiredFieldsCorrectly');
+    let pdf = new PDFGenerator('testSaveGuide_formatsRequiredFields');
     let introduction = 'Describe the rationale for this particular document (ensure, describe, control). State the intention/objective of the process/procedure.';
     let steps = [
         'Instructions for step 1',
@@ -30,8 +31,40 @@ async function testSaveGuide_formatsRequiredFields() {
     let author = 'kevin@agrefab.com';
     let replaces = '';
     let version = 1;
-    await pdf.saveGuide({ introduction, steps, author, numberId, revisionDate, effectiveDate, approvedBy, replaces, version })
+    await pdf.saveGuide({ introduction, steps, author, numberId, revisionDate, effectiveDate, approvedBy, replaces, version });
     await deleteFile(pdf.filePath);
+}
+/**
+ * Make sure there is a header and footer on every page.
+ */
+async function testAddHeader_createsHeaderOnEveryPage() {
+    let pdf = new PDFGenerator('testAddHeader_createsHeaderOnEveryPage');
+    await pdf.saveGuide({ introduction: MOCK_TEXT_LONG, author: 'n.bass@agrefab.com', numberId: 'SOP-ALL-001' });
+    await checkForHeaderAndFooter();
+    await deleteFile(pdf.filePath);
+}
+/**
+ * Helper function that goes along with @function testAddHeader_createsHeaderOnEveryPage
+ * @returns Promise
+ */
+async function checkForHeaderAndFooter() {
+    return new Promise((resolve, reject) => {
+        let pdfParser = new PDFParser();
+        pdfParser.on('pdfParser_dataError', errData => reject(errData.parserError));
+        pdfParser.on('pdfParser_dataReady', async pdfData => {
+            pdfData.formImage.Pages.forEach((element, index) => {
+                let matchesPerPage = element.Texts.filter((element, index, array) => {
+                    let text = decodeURIComponent(element.R[0].T);
+                    if (text.includes('n.bass@agrefab.com') || text.includes('SOP-ALL-001')) {
+                        return element;
+                    }
+                });
+                assert.equal(matchesPerPage.length, 2, `There was no text matching header and footer on page ${index + 1}. There was a total of ${matchesPerPage.length} matches.`)
+                resolve();
+            });
+        });
+        pdfParser.loadPDF('testAddHeader_createsHeaderOnEveryPage.pdf');
+    });
 }
 /**
  * Test pdf generator creates a file on the local filesystem. @function deleteFile contains test assertions.
@@ -54,7 +87,6 @@ async function testAddText_createsAFileWithText() {
         deleteFile(pdf1.filePath),
         deleteFile(pdf2.filePath)
     ]);
-    return
 }
 /**
  * Test filesystem naming conventions.
@@ -67,14 +99,6 @@ async function testFileSystemNamingConvention() {
     assert.equal(pdf2.filePath, name + '.pdf', `File naming convention does not match. Expected filename + .pdf. The pdf has a file path of ${pdf2.filePath}`);
     await pdf2.saveGuide();
     await deleteFile(pdf2.filePath);
-}
-/**
- * Make sure there is a header and footer on every page.
- */
-async function testAddHeader_createsHeaderOnEveryPage() {
-    let pdf = new PDFGenerator('testAddHeader_createsHeaderOnEveryPage');
-    await pdf.saveGuide({ introduction: MOCK_TEXT_LONG, author: 'n.bass@agrefab.com' })
-    await deleteFile(pdf.filePath);
 }
 /**
  * Delete file. This inherently also checks if the file exists and other errors in the delete process.
