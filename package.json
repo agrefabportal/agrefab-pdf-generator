@@ -21,5 +21,11 @@
     "homepage": "https://github.com/agrefabportal/agrefab-pdf-generator#readme",
     "dependencies": {
         "pdfkit": "^0.12.3"
-    }
+    },
+    "files": [
+        "LICENSE",
+        "README.md",
+        "index.js",
+        "fonts/"
+    ]
 }
