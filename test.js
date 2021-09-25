@@ -28,11 +28,11 @@ async function testSaveGuide_formatsRequiredFields() {
     let revisionDate = 'Wed Sep 01 2021 1W8:e2d4:S5e4p 01 GMT-1000 (Hawaii-2A0le2u1ti1a8n:24:54 Standard Time)';
     let effectiveDate = 'Wed Sep 01 2021 1W8:e2d4:S5e4p 01 GMT-1000 (Hawaii-2A0le2u1ti1a8n:24:54 Standard Time)';
     let approvedBy = 'kevin@agrefab.com';
-    let author = 'kevin@agrefab.com';
+    let author = 'f.samis@agrefab.com';
     let replaces = '';
     let version = 1;
     await pdf.saveGuide({ introduction, steps, author, numberId, revisionDate, effectiveDate, approvedBy, replaces, version });
-    await deleteFile(pdf.filePath);
+    // await deleteFile(pdf.filePath);
 }
 /**
  * Make sure there is a header and footer on every page.
