@@ -1,4 +1,4 @@
-const assert = require('assert')
+const assert = require('assert');
 const PDFGenerator = require('./index.js');
 const fs = require('fs');
 const PDFParser = require('pdf2json');
@@ -10,20 +10,15 @@ var MOCK_TEXT_LONG = `1. Introduction\n1.1 Purpose\nTitle:\nAssurance GDS\nRevis
         testAddText_createsAFileWithText(),
         testSaveGuide_createsHeaderAndFooterOnEachPage(),
         testSaveGuide_formatsRequiredFields(),
-    ]).then(value => {
-        console.log('🏖  All tests passed. ✅');
-    });
-})().catch(error => console.error(error));
+    ]).then((value) => { console.log('🏖  All tests passed. ✅'); });
+})().catch((error) => console.error(error));
 /**
  * Test pdf generator creates a file on the local filesystem. @function deleteFile contains test assertions.
  */
 async function testSaveGuide_formatsRequiredFields() {
     let pdf = new PDFGenerator('testSaveGuide_formatsRequiredFields');
     let introduction = 'Describe the rationale for this particular document (ensure, describe, control). State the intention/objective of the process/procedure.';
-    let steps = [
-        'Instructions for step 1',
-        'Instructions for step 2'
-    ];
+    let steps = ['Instructions for step 1', 'Instructions for step 2'];
     let numberId = 'SOP-ALL-001';
     let revisionDate = 'Wed Sep 01 2021 1W8:e2d4:S5e4p 01 GMT-1000 (Hawaii-2A0le2u1ti1a8n:24:54 Standard Time)';
     let effectiveDate = 'Wed Sep 01 2021 1W8:e2d4:S5e4p 01 GMT-1000 (Hawaii-2A0le2u1ti1a8n:24:54 Standard Time)';
@@ -31,7 +26,17 @@ async function testSaveGuide_formatsRequiredFields() {
     let author = 'f.samis@agrefab.com';
     let replaces = '';
     let version = 1;
-    await pdf.saveGuide({ introduction, steps, author, numberId, revisionDate, effectiveDate, approvedBy, replaces, version });
+    await pdf.saveGuide({
+        introduction,
+        steps,
+        author,
+        numberId,
+        revisionDate,
+        effectiveDate,
+        approvedBy,
+        replaces,
+        version,
+    });
     // await deleteFile(pdf.filePath);
 }
 /**
@@ -39,7 +44,11 @@ async function testSaveGuide_formatsRequiredFields() {
  */
 async function testSaveGuide_createsHeaderAndFooterOnEachPage() {
     let pdf = new PDFGenerator('testSaveGuide_createsHeaderAndFooterOnEachPage');
-    await pdf.saveGuide({ introduction: MOCK_TEXT_LONG, author: 'n.bass@agrefab.com', numberId: 'SOP-ALL-001' });
+    await pdf.saveGuide({
+        introduction: MOCK_TEXT_LONG,
+        author: 'n.bass@agrefab.com',
+        numberId: 'SOP-ALL-001',
+    });
     await checkForHeaderAndFooter();
     await deleteFile(pdf.filePath);
     async function checkForHeaderAndFooter() {
