@@ -6,6 +6,8 @@ NodeJS library for creating PDF documents.
 
 ## How to use
 ```javascript
+const PDFGenerator = require('agrefab-pdf-generator');
+
 let pdf = new PDFGenerator('Untitled');
 let introduction = 'Introduction text';
 let steps = ['Instructions for step 1', 'Instructions for step 2'];
