@@ -1,6 +1,6 @@
 {
     "name": "agrefab-pdf-generator",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "NodeJS library for creating PDF documents.",
     "main": "index.js",
     "scripts": {
