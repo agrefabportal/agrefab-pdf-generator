@@ -33,6 +33,6 @@ pdf.saveGuide({
 See [tests.js](tests.js) for more examples.
 
 ## Usage information
-* saveGuide() creates a file on the local filesystem.
 * Each PDFGenerator class represents one instance of a PDF. Do not reuse the same object. Create a new instance to rewrite a file.
-*  saveGuide() returns a promise, so it executes asychronously.
+* saveGuide() creates a file on the local filesystem.
+* saveGuide() executes asychronously.
