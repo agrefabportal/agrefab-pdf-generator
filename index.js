@@ -11,6 +11,7 @@ class PDFGenerator {
     title = 'Untitled';
     introduction = '';
     steps = [];
+    tools = [];
     author = '';
     approvedBy = '';
     numberId = '';
@@ -18,6 +19,7 @@ class PDFGenerator {
     effectiveDate = '';
     replaces = '';
     version = '';
+    searchSummary = '';
     /**
      * The class represents a pdf document. Saving the pdf creates a new file on the local filesystem. It overwrites an existing file of the same name.
      */
@@ -49,6 +51,8 @@ class PDFGenerator {
         if (options?.approvedBy) this.approvedBy = options.approvedBy;
         if (options?.replaces) this.replaces = options.replaces;
         if (options?.version) this.version = options.version;
+        if (options?.searchSummary) this.searchSummary = options.searchSummary;
+        if (options?.tools) this.tools = options.tools;
         return this.#save();
     }
     /**
@@ -56,40 +60,90 @@ class PDFGenerator {
      */
     async #save() {
         return new Promise(function (resolve, reject) {
+            let marginTop = 38;
+            let marginBottom = 72;
+            let marginLeft = 72;
+            let marginRight = 72;
+            let imageHeight = 140;
             try {
                 let writeStream = fs.createWriteStream(this.filePath);
                 writeStream.on('finish', function () { resolve(); });
                 this.doc
+                    .font('fonts/roboto/Roboto-Black.ttf')
+                    .fontSize(22)
+                    .text('Agrefab', { align: 'center' })
+                    .font('fonts/roboto/Roboto-Bold.ttf')
+                    .fontSize(20)
+                    .text(this.title, { align: 'center' })
                     .font('fonts/roboto/Roboto-Bold.ttf')
                     .fontSize(16)
-                    .text('1. Introduction')
+                    .text(this.searchSummary, { align: 'center' })
+                    .font('fonts/roboto/Roboto-Medium.ttf')
+                    .fontSize(16)
+                    .text(`Written By: ${this.author}`, { align: 'center' })
+                    .image('image.jpeg', 12, 240, { fit: [586, 400], align: 'center', valign: 'center' })
+                    .addPage()
+                    .font('fonts/roboto/Roboto-Bold.ttf')
+                    .fontSize(16)
+                    .moveDown(1)
+                    .text('Introduction')
+                    .moveDown(.5)
                     .font('fonts/roboto/Roboto-Regular.ttf')
-                    .fontSize(10)
+                    .fontSize(12)
                     .text(this.introduction)
+                    .moveDown(1.5)
                     .font('fonts/roboto/Roboto-Bold.ttf')
                     .fontSize(16)
-                    .text('2. Procedure')
+                    .text('Tools:')
+                    .moveDown(.5)
                     .font('fonts/roboto/Roboto-Regular.ttf')
-                    .fontSize(10)
+                    .fontSize(12);
+                for (let index = 0; index < this.tools.length; index++) {
+                    this.doc.text(this.tools[index]);
+                }
+                this.doc
+                    .font('fonts/roboto/Roboto-Regular.ttf')
+                    .fontSize(12)
                 for (let index = 0; index < this.steps.length; index++) {
-                    this.doc.text(`Step ${index + 1}`)
-                    this.doc.text(this.steps[index])
+                    this.doc.addPage()
+                        .rect(12, 100, 588, 40)
+                        .fill('#DD7E43')
+                        .stroke()
+                        .fillColor("#181818")
+                        .font('fonts/roboto/Roboto-Bold.ttf')
+                        .fontSize(18)
+                        .text(`Step ${index + 1} — ${this.steps[index].title}`, this.doc.x, 110);
+                    if (this.steps[index].images) {
+                        for (let index2 = 0; index2 < this.steps[index].images.length; index2++) {
+                            this.doc.image(this.steps[index].images[index2],
+                                12, 6 + imageHeight + (imageHeight * index2) + (8 * index2),
+                                { fit: [200, imageHeight], align: 'center', valign: 'center' });
+                        }
+                    }
+                    this.doc.font('fonts/roboto/Roboto-Regular.ttf')
+                        .fontSize(12)
+                        .text('', 220, imageHeight + 6)
+                    if (this.steps[index].text) {
+                        for (let index3 = 0; index3 < this.steps[index].text.length; index3++) {
+                            this.doc.fillColor("black")
+                                .text(this.steps[index].text[index3])
+                                .moveDown(1)
+                        }
+                    }
                 }
                 let pages = this.doc.bufferedPageRange();
                 for (let i = 0; i < pages.count; i++) {
                     this.doc.switchToPage(i);
                     let oldBottomMargin = this.doc.page.margins.bottom;
                     this.doc.page.margins.bottom = 0 //HACK: Have to remove bottom margin in order to write into it. https://stackoverflow.com/a/59960316/5178499
-                    let marginTop = 38;
-                    let marginBottom = 72;
-                    let marginLeft = 72;
-                    let marginRight = 72;
                     let headerItemWidth1 = 100;
                     let headerItemWidth2 = 100;
                     let headerItemWidth3 = 100;
                     let headerItemWidth4 = 100;
                     let footerBaseline = this.doc.page.height - oldBottomMargin + 18
+                    var tableStartY = 0;
                     if (i == 0) {
+                        tableStartY = marginTop + 24
                         this.doc
                             .font('fonts/roboto/Roboto-Bold.ttf')
                             .fontSize(10)
@@ -97,22 +151,15 @@ class PDFGenerator {
                             .font('fonts/roboto/Roboto-Regular.ttf')
                             .fontSize(8)
                             .text(`41-720 Kumuhau St, Waimanalo HI 96795`)
-                            .rect(marginLeft, marginTop + 24, 122, 32)
-                            .stroke()
-                            .font('fonts/roboto/Roboto-Regular.ttf')
-                            .fontSize(7)
-                            .text(`Number:`, marginLeft + 6, marginTop + 30);
                     } else {
-                        this.doc
-                            .rect(marginLeft, marginTop + 24, 122, 32)
-                            .stroke()
-                            .font('fonts/roboto/Roboto-Regular.ttf')
-                            .fontSize(7)
-                            .text(`Number:`, marginLeft + 6, marginTop + 20);
+                        tableStartY = marginTop;
                     }
                     this.doc
                         .rect(marginLeft, marginTop + 24, 122, 32)
                         .stroke()
+                        .font('fonts/roboto/Roboto-Regular.ttf')
+                        .fontSize(7)
+                        .text(`Number:`, marginLeft + 6, marginTop + 30)
                         .font('fonts/roboto/Roboto-Bold.ttf')
                         .fontSize(10)
                         .text(this.numberId, marginLeft + 6, marginTop + 40, {
