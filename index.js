@@ -6,7 +6,7 @@ const fs = require('fs');
 class PDFGenerator {
     doc;
     fileName = 'Untitled';
-    get filePath() { return `${this.fileName}.pdf` }
+    get filePath() { return `documents/${this.fileName}.pdf` }
     title = 'Untitled';
     introduction = '';
     steps = [];
@@ -55,21 +55,27 @@ class PDFGenerator {
         if (options?.guidePhoto) this.guidePhoto = options.guidePhoto;
         return this.#save();
     }
+    async #createDocumentDirectoryIfEmpty() {
+        return new Promise((resolve, reject) => {
+            fs.mkdir('documents', { recursive: true }, (err) => {
+                if (err) { reject(err); } else { resolve(); }
+            });
+        });
+    }
     /**
      * Make all configurations before saving.
      */
     async #save() {
-        return new Promise(function (resolve, reject) {
+        return new Promise(async function (resolve, reject) {
             let marginTop = 38;
             let marginBottom = 72;
             let marginLeft = 72;
             let marginRight = 72;
             let imageHeight = 140;
             try {
+                await this.#createDocumentDirectoryIfEmpty().catch(error => { throw error; });
                 let writeStream = fs.createWriteStream(this.filePath);
-                writeStream.on('finish', function () {
-                    resolve();
-                });
+                writeStream.on('finish', _ => resolve()).on('error', error => { throw error; });
                 this.doc
                     .font('fonts/roboto/Roboto-Black.ttf')
                     .fontSize(22)

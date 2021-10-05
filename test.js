@@ -22,41 +22,15 @@ Report anything out of place or in need of maintenance to Kevin, please take a p
  */
 async function testImageOptions_addsImage() {
     let pdf = new PDFGenerator('testSaveGuide_formatsRequiredFields');
-    let introduction = MOCK_TEXT_SHORT;
     let steps = [{
-        title: 'Microwave Settings for cleaning',
-        images: ['image.jpeg', 'image.jpeg', 'image.jpeg', 'image.jpeg',],
-        text: ['insure microwave dryer power is shut down before starting to clean', 'Power Key: OFF position', 'System power Light OFF', 'AC System: OFF, Fan: AUTO', 'Make a note of what time Cleaning was started']
-    }, {
-        title: 'Microwave Settings for cleaning',
-        images: [],
-        text: []
+        photos: ['photos/image.jpeg', 'photos/image.jpeg', 'photos/image.jpeg', 'photos/image.jpeg',],
     }];
-    let numberId = 'SOP-ALL-001';
-    let revisionDate = 'Wed Sep 01 2021 1W8:e2d4:S5e4p 01 GMT-1000 (Hawaii-2A0le2u1ti1a8n:24:54 Standard Time)';
-    let effectiveDate = 'Wed Sep 01 2021 1W8:e2d4:S5e4p 01 GMT-1000 (Hawaii-2A0le2u1ti1a8n:24:54 Standard Time)';
-    let approvedBy = 'kevin@agrefab.com';
-    let author = 'f.samis@agrefab.com';
-    let replaces = '';
-    let version = 1;
-    let tools = ['18v Milwaukee Blower (1)', '18v Back Pack Vacuum - Milwaukee (1)', 'Short Duster Broom (1)'];
-    let guideImage = 'image.jpeg';
-    let searchSummary = 'SOP for cleaning microwave dryer';
+    let guidePhoto = 'photos/image.jpeg';
     await pdf.saveGuide({
-        introduction,
         steps,
-        author,
-        numberId,
-        revisionDate,
-        effectiveDate,
-        approvedBy,
-        replaces,
-        version,
-        guideImage,
-        searchSummary,
-        tools,
+        guidePhoto,
     });
-    await deleteFile(pdf.filePath);
+    // await deleteFile(pdf.filePath);
 }
 /**
  * Create file with all options. Requires visual inspection, so the file is not deleted by default.
@@ -89,7 +63,7 @@ async function testSaveGuide_formatsRequiredFields() {
  * Test there is a header and footer on every page.
  */
 async function testHeaderAndFooter() {
-    let pdf = new PDFGenerator('testSaveGuide_addsHeaderAndFooter');
+    let pdf = new PDFGenerator('testHeaderAndFooter');
     await pdf.saveGuide({
         introduction: MOCK_TEXT_LONG,
         author: 'n.bass@agrefab.com',
@@ -109,15 +83,15 @@ async function testHeaderAndFooter() {
                     ]
                     let matchesPerPage = element.Texts.filter((element, index, array) => {
                         let lineOfText = decodeURIComponent(element.R[0].T);
-
-                        if (lineOfText.includes('n.bass@agrefab.com') || lineOfText.includes('SOP-ALL-001'))
+                        if (lineOfText === 'n.bass@agrefab.com' || lineOfText === 'SOP-ALL-001')
                             return element;
                     });
-                    assert.equal(matchesPerPage.length, 2, `There was no text matching header and footer on page ${index + 1}. There was a total of ${matchesPerPage.length} matches. There were ${expectedMatchNumber} expected matched.`)
+                    let expectedMatchNumber = 2;
+                    assert.equal(matchesPerPage.length, expectedMatchNumber, `There was no text matching header and footer on page ${index + 1}. There was a total of ${matchesPerPage.length} matches. There were ${expectedMatchNumber} expected matched.`)
                 });
                 resolve();
             });
-            pdfParser.loadPDF('testSaveGuide_addsHeaderAndFooter.pdf');
+            pdfParser.loadPDF('documents/testHeaderAndFooter.pdf');
         });
     }
 }
@@ -125,19 +99,19 @@ async function testHeaderAndFooter() {
  * Test pdf generator creates a file on the local filesystem. @function deleteFile contains test assertions.
  */
 async function testSaveGuideCreatesFile() {
-    let pdf = new PDFGenerator('testPdfGenerator_createsFile');
-    await pdf.saveGuide();
-    // await deleteFile(pdf.filePath);
+    let pdf = new PDFGenerator('testSaveGuideCreatesFile');
+    await pdf.saveGuide().catch(error => console.error(error));
+    await deleteFile(pdf.filePath);
 }
 /**
  * Saving a guide with options should create a file with more text than a file without options.
  */
 async function testAddText() {
-    let pdf1 = new PDFGenerator('testPdfGenerator_createsFile1');
+    let pdf1 = new PDFGenerator('testAddText1');
     await pdf1.saveGuide();
-    let pdf2 = new PDFGenerator('testPdfGenerator_createsFile2');
+    let pdf2 = new PDFGenerator('testAddText2');
     await pdf2.saveGuide({ introduction: '🌮' });
-    assert.equal(fs.statSync('testAddText.pdf').size < fs.statSync('testAddText.pdf').size, true, 'The empty file is not smaller than the file with text. Check that there is text in testAddText.pdf.');
+    assert.equal(fs.statSync('documents/testAddText1.pdf').size < fs.statSync('documents/testAddText2.pdf').size, true, 'The empty file is not smaller than the file with text. Check that there is text in testAddText.pdf.');
     await Promise.all([
         deleteFile(pdf1.filePath),
         deleteFile(pdf2.filePath)
@@ -148,10 +122,10 @@ async function testAddText() {
  */
 async function testPdfNamingConvention() {
     let pdf1 = new PDFGenerator();
-    assert.equal(pdf1.filePath, 'Untitled.pdf', `Default file name did not match expected. PDF file name: ${pdf1.fileName} and file path: ${pdf1.filePath}`);
+    assert.equal(pdf1.filePath, 'documents/Untitled.pdf', `Default file name did not match expected. PDF file name: ${pdf1.fileName} and file path: ${pdf1.filePath}`);
     let name = 'testFileSystemNamingConvention';
     let pdf2 = new PDFGenerator(name);
-    assert.equal(pdf2.filePath, name + '.pdf', `File naming convention does not match. Expected filename + .pdf. The pdf has a file path of ${pdf2.filePath}`);
+    assert.equal(pdf2.filePath, `documents/${name}.pdf`, `File naming convention does not match. Expected filename + .pdf. The pdf has a file path of ${pdf2.filePath}`);
     await pdf2.saveGuide();
     await deleteFile(pdf2.filePath);
 }
