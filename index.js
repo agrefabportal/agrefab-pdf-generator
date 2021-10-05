@@ -53,6 +53,7 @@ class PDFGenerator {
         if (options?.version) this.version = options.version;
         if (options?.searchSummary) this.searchSummary = options.searchSummary;
         if (options?.tools) this.tools = options.tools;
+        if (options?.guidePhoto) this.guidePhoto = options.guidePhoto;
         return this.#save();
     }
     /**
@@ -67,22 +68,28 @@ class PDFGenerator {
             let imageHeight = 140;
             try {
                 let writeStream = fs.createWriteStream(this.filePath);
-                writeStream.on('finish', function () { resolve(); });
+                writeStream.on('finish', function () {
+                    resolve();
+                });
                 this.doc
                     .font('fonts/roboto/Roboto-Black.ttf')
                     .fontSize(22)
                     .text('Agrefab', { align: 'center' })
                     .font('fonts/roboto/Roboto-Bold.ttf')
+                    .moveDown(.2)
                     .fontSize(20)
                     .text(this.title, { align: 'center' })
                     .font('fonts/roboto/Roboto-Bold.ttf')
+                    .moveDown(.5)
                     .fontSize(16)
                     .text(this.searchSummary, { align: 'center' })
                     .font('fonts/roboto/Roboto-Medium.ttf')
                     .fontSize(16)
-                    .text(`Written By: ${this.author}`, { align: 'center' })
-                    .image('image.jpeg', 12, 240, { fit: [586, 400], align: 'center', valign: 'center' })
-                    .addPage()
+                    .text(`Written By: ${this.author}`, { align: 'center' });
+                if (this.guidePhoto) {
+                    this.doc.image(this.guidePhoto, 12, 240, { fit: [586, 400], align: 'center', valign: 'center' })
+                }
+                this.doc.addPage()
                     .font('fonts/roboto/Roboto-Bold.ttf')
                     .fontSize(16)
                     .moveDown(1)
@@ -93,7 +100,7 @@ class PDFGenerator {
                     .text(this.introduction)
                     .moveDown(1.5)
                     .font('fonts/roboto/Roboto-Bold.ttf')
-                    .fontSize(16)
+                    .fontSize(14)
                     .text('Tools:')
                     .moveDown(.5)
                     .font('fonts/roboto/Roboto-Regular.ttf')
@@ -113,9 +120,10 @@ class PDFGenerator {
                         .font('fonts/roboto/Roboto-Bold.ttf')
                         .fontSize(18)
                         .text(`Step ${index + 1} — ${this.steps[index].title}`, this.doc.x, 110);
-                    if (this.steps[index].images) {
-                        for (let index2 = 0; index2 < this.steps[index].images.length; index2++) {
-                            this.doc.image(this.steps[index].images[index2],
+                    if (this.steps[index].photos) {
+                        for (let index2 = 0; index2 < this.steps[index].photos.length; index2++) {
+                            let photoPath = this.steps[index].photos[index2];
+                            this.doc.image(photoPath,
                                 12, 6 + imageHeight + (imageHeight * index2) + (8 * index2),
                                 { fit: [200, imageHeight], align: 'center', valign: 'center' });
                         }
@@ -123,10 +131,11 @@ class PDFGenerator {
                     this.doc.font('fonts/roboto/Roboto-Regular.ttf')
                         .fontSize(12)
                         .text('', 220, imageHeight + 6)
-                    if (this.steps[index].text) {
-                        for (let index3 = 0; index3 < this.steps[index].text.length; index3++) {
+                        .text(this.steps[index].stepDescription)
+                    if (this.steps[index].stepBullets) {
+                        for (let index3 = 0; index3 < this.steps[index].stepBullets.length; index3++) {
                             this.doc.fillColor("black")
-                                .text(this.steps[index].text[index3])
+                                .text(this.steps[index].stepBullets[index3][3])
                                 .moveDown(1)
                         }
                     }
@@ -157,6 +166,7 @@ class PDFGenerator {
                     this.doc
                         .rect(marginLeft, marginTop + 24, 122, 32)
                         .stroke()
+                        .text('') // HACK: Text margin top needs to be reset or Number: is lower than expected
                         .font('fonts/roboto/Roboto-Regular.ttf')
                         .fontSize(7)
                         .text(`Number:`, marginLeft + 6, marginTop + 30)
@@ -178,7 +188,7 @@ class PDFGenerator {
                         .text(this.title, marginLeft + 128, marginTop + 40, {
                             width: 180,
                             height: 20,
-                            lineBreak: false
+                            lineBreak: false,
                         })
                         .rect(marginLeft + 314, marginTop + 24, 78, 32)
                         .stroke()
@@ -204,8 +214,6 @@ class PDFGenerator {
                             height: 20,
                             lineBreak: false
                         })
-
-                        // Footer
                         .rect(marginLeft, footerBaseline, 128, 32)
                         .stroke()
                         .font('fonts/roboto/Roboto-Regular.ttf')
