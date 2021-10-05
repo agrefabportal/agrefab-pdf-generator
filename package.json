@@ -29,6 +29,8 @@
         "LICENSE",
         "README.md",
         "index.js",
-        "fonts/"
+        "fonts/",
+        "package.json",
+        "package-lock.json"
     ]
 }
