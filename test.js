@@ -9,10 +9,10 @@ Underlying method: get all material on to the floor or sucked up in vacuum, then
 Report anything out of place or in need of maintenance to Kevin, please take a photo if possible`;
 (async function main() {
     Promise.all([
-        testSaveGuide_createsFile(),
-        testFileSystemNamingConvention(),
-        testSaveGuideWithOptions_addsText(),
-        testSaveGuide_addsHeaderAndFooter(),
+        testSaveGuideCreatesFile(),
+        testPdfNamingConvention(),
+        testAddText(),
+        testHeaderAndFooter(),
         testSaveGuide_formatsRequiredFields(),
         testImageOptions_addsImage(),
     ]).then(_ => console.log('🏖  All tests passed. ✅'));
@@ -56,7 +56,7 @@ async function testImageOptions_addsImage() {
         searchSummary,
         tools,
     });
-    // await deleteFile(pdf.filePath);
+    await deleteFile(pdf.filePath);
 }
 /**
  * Create file with all options. Requires visual inspection, so the file is not deleted by default.
@@ -83,13 +83,13 @@ async function testSaveGuide_formatsRequiredFields() {
         replaces,
         version,
     });
-    // await deleteFile(pdf.filePath);
+    await deleteFile(pdf.filePath);
 }
 /**
  * Test there is a header and footer on every page.
  */
-async function testSaveGuide_addsHeaderAndFooter() {
-    let pdf = new PDFGenerator('testSaveGuide_createsHeaderAndFooterOnEachPage');
+async function testHeaderAndFooter() {
+    let pdf = new PDFGenerator('testSaveGuide_addsHeaderAndFooter');
     await pdf.saveGuide({
         introduction: MOCK_TEXT_LONG,
         author: 'n.bass@agrefab.com',
@@ -103,46 +103,50 @@ async function testSaveGuide_addsHeaderAndFooter() {
             pdfParser.on('pdfParser_dataError', errData => reject(errData.parserError));
             pdfParser.on('pdfParser_dataReady', async pdfData => {
                 pdfData.formImage.Pages.forEach((element, index) => {
+                    let expectedMatches = [
+                        'n.bass@agrefab.com',
+                        'SOP-ALL-001'
+                    ]
                     let matchesPerPage = element.Texts.filter((element, index, array) => {
-                        let text = decodeURIComponent(element.R[0].T);
-                        if (text.includes('n.bass@agrefab.com') || text.includes('SOP-ALL-001')) {
+                        let lineOfText = decodeURIComponent(element.R[0].T);
+
+                        if (lineOfText.includes('n.bass@agrefab.com') || lineOfText.includes('SOP-ALL-001'))
                             return element;
-                        }
                     });
-                    assert.equal(matchesPerPage.length, 2, `There was no text matching header and footer on page ${index + 1}. There was a total of ${matchesPerPage.length} matches.`)
-                    resolve();
+                    assert.equal(matchesPerPage.length, 2, `There was no text matching header and footer on page ${index + 1}. There was a total of ${matchesPerPage.length} matches. There were ${expectedMatchNumber} expected matched.`)
                 });
+                resolve();
             });
-            pdfParser.loadPDF('testSaveGuide_createsHeaderAndFooterOnEachPage.pdf');
+            pdfParser.loadPDF('testSaveGuide_addsHeaderAndFooter.pdf');
         });
     }
 }
 /**
  * Test pdf generator creates a file on the local filesystem. @function deleteFile contains test assertions.
  */
-async function testSaveGuide_createsFile() {
+async function testSaveGuideCreatesFile() {
     let pdf = new PDFGenerator('testPdfGenerator_createsFile');
     await pdf.saveGuide();
-    await deleteFile(pdf.filePath);
+    // await deleteFile(pdf.filePath);
 }
 /**
- * Test that saving a guide with options creates a file with more text than a file without options.
+ * Saving a guide with options should create a file with more text than a file without options.
  */
-async function testSaveGuideWithOptions_addsText() {
+async function testAddText() {
     let pdf1 = new PDFGenerator('testPdfGenerator_createsFile1');
     await pdf1.saveGuide();
     let pdf2 = new PDFGenerator('testPdfGenerator_createsFile2');
     await pdf2.saveGuide({ introduction: '🌮' });
-    assert.equal(fs.statSync('testPdfGenerator_createsFile1.pdf').size < fs.statSync('testPdfGenerator_createsFile2.pdf').size, true, 'The empty file is not smaller than the file with text. Check that there is text in testPdfGenerator_createsFile2.pdf.');
+    assert.equal(fs.statSync('testAddText.pdf').size < fs.statSync('testAddText.pdf').size, true, 'The empty file is not smaller than the file with text. Check that there is text in testAddText.pdf.');
     await Promise.all([
         deleteFile(pdf1.filePath),
         deleteFile(pdf2.filePath)
     ]);
 }
 /**
- * Test filesystem naming conventions.
+ * Naming conventions for saving the PDF.
  */
-async function testFileSystemNamingConvention() {
+async function testPdfNamingConvention() {
     let pdf1 = new PDFGenerator();
     assert.equal(pdf1.filePath, 'Untitled.pdf', `Default file name did not match expected. PDF file name: ${pdf1.fileName} and file path: ${pdf1.filePath}`);
     let name = 'testFileSystemNamingConvention';
@@ -152,7 +156,7 @@ async function testFileSystemNamingConvention() {
     await deleteFile(pdf2.filePath);
 }
 /**
- * Delete file pn the local filesystem. This inherently also checks if the file exists. Assertions are made during the delete process.
+ * Delete file on the local filesystem. This inherently also checks if the file exists. Assertions are made during the delete process.
  * @param {string} filePath Relative path to the file including its name and extension.
  */
 async function deleteFile(filePath) {
