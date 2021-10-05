@@ -92,7 +92,7 @@ class PDFGenerator {
                     .fontSize(16)
                     .text(`Written By: ${this.author}`, { align: 'center' });
                 if (this.guidePhoto) {
-                    this.doc.image(this.guidePhoto, 12, 240, { fit: [586, 400], align: 'center', valign: 'center' })
+                    this.doc.image(`photos/${this.guidePhoto}`, 12, 240, { fit: [586, 400], align: 'center', valign: 'center' })
                 }
                 this.doc.addPage()
                     .font('fonts/roboto/Roboto-Bold.ttf')
@@ -127,8 +127,7 @@ class PDFGenerator {
                         .text(`Step ${index + 1} — ${this.steps[index].title}`, this.doc.x, 110);
                     if (this.steps[index].photos) {
                         for (let index2 = 0; index2 < this.steps[index].photos.length; index2++) {
-                            let photoPath = this.steps[index].photos[index2];
-                            this.doc.image(photoPath,
+                            this.doc.image(`photos/${this.steps[index].photos[index2]}`,
                                 12, 6 + imageHeight + (imageHeight * index2) + (8 * index2),
                                 { fit: [200, imageHeight], align: 'center', valign: 'center' });
                         }
