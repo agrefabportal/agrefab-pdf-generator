@@ -1,5 +1,6 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
+const path = require('path');
 /**
  * PDFGenerator library specially designed to make Agrefab guide documents.
  */
