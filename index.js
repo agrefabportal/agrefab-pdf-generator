@@ -8,6 +8,8 @@ class PDFGenerator {
     fileName = 'Untitled';
     get filePath() { return `documents/${this.fileName}.pdf` }
     title = 'Untitled';
+    title01 = 'Fingers';
+    title02 = 'Mothers';
     introduction = '';
     steps = [];
     tools = [];
@@ -19,11 +21,116 @@ class PDFGenerator {
     replaces = '';
     version = '';
     searchSummary = '';
+    locationReadable = '';
+    locationBarcode = '';
+    productReadable = '';
+    productImage = '';
+    productFingersBarcode = '';
+    productMothersBarcode = '';
+    quantity = '';
+    serialBarcode = '';
     /**
      * The class represents a pdf document. Saving the pdf creates a new file on the local filesystem. It overwrites an existing file of the same name.
      */
     constructor(fileName) {
         if (fileName != undefined) this.fileName = fileName;
+    }
+    async saveBarcode(options) {
+        if (options?.location) this.location = options.location;
+        this.doc = new PDFDocument({
+            bufferPages: true,
+            font: 'fonts/roboto/Roboto-Regular.ttf',
+            size: 'LETTER',
+            margins: { 
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0
+            },
+            layout: 'landscape'
+        });
+        if (options?.serialBarcode) this.serialBarcode = options.serialBarcode;
+        if (options?.locationBarcode) this.locationBarcode = options.locationBarcode;
+        if (options?.locationReadable) this.locationReadable = options.locationReadable;
+        if (options?.productFingersBarcode) this.productFingersBarcode = options.productFingersBarcode;
+        if (options?.productMothersBarcode) this.productMothersBarcode = options.productMothersBarcode;
+        if (options?.productReadable) this.productReadable = options.productReadable;
+        if (options?.quantity) this.quantity = options.quantity;
+        if (options?.productImage) this.productImage = options.productImage;
+        this.title01 = this.locationReadable + ' Harvested Field Cleaned Organic Fingers';
+        this.title02 = this.locationReadable + ' Mothers Field Cleaned Organic Mothers';
+        this.subTitle01 = this.productFingersReadable;
+        this.subTitle02 = this.productMothersReadable;
+        return new Promise(async function (resolve, reject) {
+            try {
+                await this.#createDocumentDirectoryIfEmpty().catch(error => { throw error; });
+                let writeStream = fs.createWriteStream(this.filePath);
+                writeStream.on('finish', _ => resolve()).on('error', error => { throw error; });
+                this.doc
+                    .font(path.join(__dirname, 'fonts', 'varela round', 'VarelaRound-Regular.ttf'))
+                    .fontSize(30)
+                    .text(this.title01, { width: 396, align: 'center' })
+                    .fontSize(30)
+                    .text(this.productReadable, 20, 128, { height: 68, valign: 'center' })
+                    .fontSize(13)
+                    .text('QUANTITY', 0, 250, { width: 120, align: 'center' })
+                    .fontSize(30)
+                    .text(this.quantity || '', 120, 246, { width: 120, align: 'center' })
+                    .fontSize(12)
+                    .text('REQUEST:', 120, 216, { width: 138, align: 'center' })
+                    .fontSize(12)
+                    .text('WEIGHED LBS:', 258, 216, { width: 138, align: 'center' })
+                    .fontSize(13)
+                    .text('PRODUCT', 0, 350, { width: 120, align: 'center' })
+                    .fontSize(13)
+                    .text('COMPONENTS LOCATION', 0, 450, { width: 120, align: 'center' })
+                    .fontSize(13)
+                    .text('LOT /SERIAL NUMBER', 0, 550, { width: 120, align: 'center' }).fontSize(30)
+                    .text(this.title02, 396, 0, { width: 396, align: 'center' })
+                    .fontSize(30)
+                    .text(this.productReadable, 416, 128, { height: 68, valign: 'center' })
+                    .fontSize(13)
+                    .text('QUANTITY', 396, 250, { width: 120, align: 'center' })
+                    .fontSize(30)
+                    .text(this.quantity || '', 516, 246, { width: 120, align: 'center' })
+                    .fontSize(12)
+                    .text('REQUEST:', 516, 216, { width: 138, align: 'center' })
+                    .fontSize(12)
+                    .text('WEIGHED LBS:', 654, 216, { width: 138, align: 'center' })
+                    .fontSize(13)
+                    .text('PRODUCT', 396, 350, { width: 120, align: 'center' })
+                    .fontSize(13)
+                    .text('COMPONENTS LOCATION', 396, 440, { width: 120, align: 'center' })
+                    .fontSize(13)
+                    .text('LOT/SERIAL NUMBER', 396, 540, { width: 120, align: 'center' })
+                if (this.productImage) {
+                    this.doc.image(path.join(process.cwd(), 'documents', `${this.productImage}`), 306, 128, { height: 68, align: 'center', valign: 'center' })
+                    this.doc.image(path.join(process.cwd(), 'documents', `${this.productImage}`), 704, 128, { height: 68, align: 'center', valign: 'center' })
+                }
+                if (this.productFingersBarcode) {
+                    this.doc.image(path.join(process.cwd(), 'documents', `${this.productFingersBarcode}.png`), 120, 330, { height: 60, align: 'center', valign: 'center' })
+                    this.doc.image(path.join(process.cwd(), 'documents', `${this.productMothersBarcode}.png`), 516, 330, { height: 60, align: 'center', valign: 'center' })
+                }
+                if (this.locationBarcode) {
+                    this.doc.image(path.join(process.cwd(), 'documents', `${this.locationBarcode}.png`), 120, 430, { height: 60, align: 'center', valign: 'center' })
+                    this.doc.image(path.join(process.cwd(), 'documents', `${this.locationBarcode}.png`), 516, 430, { height: 60, align: 'center', valign: 'center' })
+                }
+                if (this.serialBarcode) {
+                    this.doc.image(path.join(process.cwd(), 'documents', `${this.serialBarcode}.png`), 120, 530, { height: 60, align: 'center', valign: 'center' })
+                    this.doc.image(path.join(process.cwd(), 'documents', `${this.serialBarcode}.png`), 516, 530, { height: 60, align: 'center', valign: 'center' })
+                }
+                this.doc.pipe(writeStream);
+                this.doc.end();
+            } catch (error) {
+                reject(error);
+            }
+        }.bind(this));
+    }
+    /**
+     * Save document as a file in the working directory. Overwrites an existing file of the same name
+     * @param {Object} options Fields
+     */
+    async saveGuide(options) {
         this.doc = new PDFDocument({
             bufferPages: true,
             font: 'fonts/roboto/Roboto-Regular.ttf',
@@ -34,12 +141,6 @@ class PDFGenerator {
                 right: 72
             }
         });
-    }
-    /**
-     * Save document as a file in the working directory. Overwrites an existing file of the same name
-     * @param {Object} options Fields
-     */
-    async saveGuide(options) {
         if (options?.introduction) this.introduction = options.introduction;
         if (options?.title) this.title = options.title;
         if (options?.steps) this.steps = options.steps;
