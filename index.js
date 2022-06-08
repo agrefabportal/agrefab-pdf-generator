@@ -6,11 +6,11 @@ const path = require('path');
  */
 class PDFGenerator {
     doc;
-    fileName = 'Untitled';
+    fileName = 'Unvarietyd';
     get filePath() { return `documents/${this.fileName}.pdf` }
-    title = 'Untitled';
-    title01 = 'Fingers';
-    title02 = 'Mothers';
+    variety = 'Unvarietyd';
+    variety01 = 'Fingers';
+    variety02 = 'Mothers';
     introduction = '';
     steps = [];
     tools = [];
@@ -24,12 +24,14 @@ class PDFGenerator {
     searchSummary = '';
     locationReadable = '';
     locationBarcode = '';
-    productReadable = '';
+    variety = '';
     productImage = '';
     productFingersBarcode = '';
     productMothersBarcode = '';
     quantity = '';
-    serialBarcode = '';
+    finishedLot = '';
+    consumedLots = [];
+    productionId = '';
     /**
      * The class represents a pdf document. Saving the pdf creates a new file on the local filesystem. It overwrites an existing file of the same name.
      */
@@ -40,9 +42,9 @@ class PDFGenerator {
         if (options?.location) this.location = options.location;
         this.doc = new PDFDocument({
             bufferPages: true,
-            font: 'fonts/roboto/Roboto-Regular.ttf',
+            font: 'fonts/varela round/VarelaRound-Regular.ttf',
             size: 'LETTER',
-            margins: { 
+            margins: {
                 top: 0,
                 bottom: 0,
                 left: 0,
@@ -50,18 +52,14 @@ class PDFGenerator {
             },
             layout: 'landscape'
         });
-        if (options?.serialBarcode) this.serialBarcode = options.serialBarcode;
-        if (options?.locationBarcode) this.locationBarcode = options.locationBarcode;
+        if (options?.title) this.title = options.title;
+        if (options?.variety) this.variety = options.variety;
+        if (options?.finishedLot) this.finishedLot = options.finishedLot;
+        if (options?.consumedLots) this.consumedLots = options.consumedLots;
         if (options?.locationReadable) this.locationReadable = options.locationReadable;
-        if (options?.productFingersBarcode) this.productFingersBarcode = options.productFingersBarcode;
-        if (options?.productMothersBarcode) this.productMothersBarcode = options.productMothersBarcode;
-        if (options?.productReadable) this.productReadable = options.productReadable;
         if (options?.quantity) this.quantity = options.quantity;
         if (options?.productImage) this.productImage = options.productImage;
-        this.title01 = this.locationReadable + ' Harvested Field Cleaned Organic Fingers';
-        this.title02 = this.locationReadable + ' Mothers Field Cleaned Organic Mothers';
-        this.subTitle01 = this.productFingersReadable;
-        this.subTitle02 = this.productMothersReadable;
+        if (options?.productionId) this.productionId = options.productionId;
         return new Promise(async function (resolve, reject) {
             try {
                 await this.#createDocumentDirectoryIfEmpty().catch(error => { throw error; });
@@ -69,56 +67,37 @@ class PDFGenerator {
                 writeStream.on('finish', _ => resolve()).on('error', error => { throw error; });
                 this.doc
                     .font(path.join(__dirname, 'fonts', 'varela round', 'VarelaRound-Regular.ttf'))
-                    .fontSize(30)
-                    .text(this.title01, { width: 396, align: 'center' })
-                    .fontSize(30)
-                    .text(this.productReadable, 20, 128, { height: 68, valign: 'center' })
-                    .fontSize(13)
-                    .text('QUANTITY', 0, 250, { width: 120, align: 'center' })
-                    .fontSize(30)
-                    .text(this.quantity || '', 120, 246, { width: 120, align: 'center' })
-                    .fontSize(12)
-                    .text('REQUEST:', 120, 216, { width: 138, align: 'center' })
-                    .fontSize(12)
-                    .text('WEIGHED LBS:', 258, 216, { width: 138, align: 'center' })
-                    .fontSize(13)
-                    .text('PRODUCT', 0, 350, { width: 120, align: 'center' })
-                    .fontSize(13)
-                    .text('COMPONENTS LOCATION', 0, 450, { width: 120, align: 'center' })
-                    .fontSize(13)
-                    .text('LOT /SERIAL NUMBER', 0, 550, { width: 120, align: 'center' }).fontSize(30)
-                    .text(this.title02, 396, 0, { width: 396, align: 'center' })
-                    .fontSize(30)
-                    .text(this.productReadable, 416, 128, { height: 68, valign: 'center' })
-                    .fontSize(13)
-                    .text('QUANTITY', 396, 250, { width: 120, align: 'center' })
-                    .fontSize(30)
-                    .text(this.quantity || '', 516, 246, { width: 120, align: 'center' })
-                    .fontSize(12)
-                    .text('REQUEST:', 516, 216, { width: 138, align: 'center' })
-                    .fontSize(12)
-                    .text('WEIGHED LBS:', 654, 216, { width: 138, align: 'center' })
-                    .fontSize(13)
-                    .text('PRODUCT', 396, 350, { width: 120, align: 'center' })
-                    .fontSize(13)
-                    .text('COMPONENTS LOCATION', 396, 440, { width: 120, align: 'center' })
-                    .fontSize(13)
-                    .text('LOT/SERIAL NUMBER', 396, 540, { width: 120, align: 'center' })
-                if (this.productImage) {
-                    this.doc.image(path.join(process.cwd(), 'documents', `${this.productImage}`), 306, 128, { height: 68, align: 'center', valign: 'center' })
-                    this.doc.image(path.join(process.cwd(), 'documents', `${this.productImage}`), 704, 128, { height: 68, align: 'center', valign: 'center' })
+                    .fontSize(24)
+                    .text(this.title, 128, 12, { width: 268, align: 'center' })
+                if (this.productionId.length > 0) {
+                    this.doc.image(path.join(process.cwd(), 'documents', `${this.productionId}.png`), 12, 12, { height: 100, align: 'center', valign: 'center' })
                 }
-                if (this.productFingersBarcode) {
-                    this.doc.image(path.join(process.cwd(), 'documents', `${this.productFingersBarcode}.png`), 120, 330, { height: 60, align: 'center', valign: 'center' })
-                    this.doc.image(path.join(process.cwd(), 'documents', `${this.productMothersBarcode}.png`), 516, 330, { height: 60, align: 'center', valign: 'center' })
-                }
-                if (this.locationBarcode) {
-                    this.doc.image(path.join(process.cwd(), 'documents', `${this.locationBarcode}.png`), 120, 430, { height: 60, align: 'center', valign: 'center' })
-                    this.doc.image(path.join(process.cwd(), 'documents', `${this.locationBarcode}.png`), 516, 430, { height: 60, align: 'center', valign: 'center' })
-                }
-                if (this.serialBarcode) {
-                    this.doc.image(path.join(process.cwd(), 'documents', `${this.serialBarcode}.png`), 120, 530, { height: 60, align: 'center', valign: 'center' })
-                    this.doc.image(path.join(process.cwd(), 'documents', `${this.serialBarcode}.png`), 516, 530, { height: 60, align: 'center', valign: 'center' })
+                this.doc
+                    .fontSize(12)
+                    .text('Scan to open in Odoo', 12, 120, { width: 116, align: 'center' })
+                    .fontSize(24)
+                    .text(this.variety, 300, 160, { height: 68, valign: 'center' })
+                    .fontSize(13)
+                    .text('TOTAL REQUEST', 0, 236, { width: 120, align: 'center' })
+                    .fontSize(24)
+                    .text(this.quantity, 0, 270, { width: 120, align: 'center' })
+                    .fontSize(13)
+                    .text('FIELD CLEANED FINGERS LBS', 120, 236, { width: 138, align: 'center' })
+                    .fontSize(13)
+                    .text('FIELD CLEANED MOTHERS LBS', 240, 236, { width: 138, align: 'center' })
+                this.doc.image(path.join(process.cwd(), 'documents', `${this.finishedLot}.png`), 12, 160, { height: 60, align: 'center', valign: 'center' })
+                for (let index = 0; index < this.consumedLots.length; index++) {
+                    let rowHeight = 316 + index * 74;
+                    const lot = this.consumedLots[index];
+                    var tempLot = lot.lot;
+                    const location = tempLot.substring(6, 8);
+                    const field = tempLot.substring(tempLot.indexOf('F') + 1, tempLot.indexOf('R'));
+                    const row = tempLot.substring(tempLot.indexOf('F') + 1, tempLot.indexOf('R'));
+                    this.doc.image(path.join(process.cwd(), 'documents', `${lot.lot}.png`), 12, rowHeight, { height: 60, align: 'center', valign: 'center' })
+                        .fontSize(13)
+                        .text(`${location.toUpperCase()} FIELD ${field} ROW ${row}  PLANTED FT`, 280, rowHeight, { width: 120, align: 'center' })
+                        .fontSize(24)
+                        .text(lot.quantity, 280, rowHeight + 30, { width: 120, align: 'center' })
                 }
                 this.doc.pipe(writeStream);
                 this.doc.end();
@@ -143,7 +122,7 @@ class PDFGenerator {
             }
         });
         if (options?.introduction) this.introduction = options.introduction;
-        if (options?.title) this.title = options.title;
+        if (options?.variety) this.variety = options.variety;
         if (options?.steps) this.steps = options.steps;
         if (options?.author) this.author = options.author;
         if (options?.numberId) this.numberId = options.numberId;
@@ -185,7 +164,7 @@ class PDFGenerator {
                     .font('fonts/roboto/Roboto-Bold.ttf')
                     .moveDown(.2)
                     .fontSize(20)
-                    .text(this.title, { align: 'center' })
+                    .text(this.variety, { align: 'center' })
                     .font('fonts/roboto/Roboto-Bold.ttf')
                     .moveDown(.5)
                     .fontSize(16)
@@ -226,7 +205,7 @@ class PDFGenerator {
                         .fillColor("#181818")
                         .font('fonts/roboto/Roboto-Bold.ttf')
                         .fontSize(18)
-                        .text(`Step ${index + 1} — ${this.steps[index].title}`, this.doc.x, 110);
+                        .text(`Step ${index + 1} — ${this.steps[index].variety}`, this.doc.x, 110);
                     if (this.steps[index].photos) {
                         for (let index2 = 0; index2 < this.steps[index].photos.length; index2++) {
                             this.doc.image(`photos/${this.steps[index].photos[index2]}`,
@@ -288,10 +267,10 @@ class PDFGenerator {
                         .stroke()
                         .font('fonts/roboto/Roboto-Medium.ttf')
                         .fontSize(7)
-                        .text(`Title:`, marginLeft + 128, marginTop + 30)
+                        .text(`variety:`, marginLeft + 128, marginTop + 30)
                         .fontSize(10)
                         .font('fonts/roboto/Roboto-Bold.ttf')
-                        .text(this.title, marginLeft + 128, marginTop + 40, {
+                        .text(this.variety, marginLeft + 128, marginTop + 40, {
                             width: 180,
                             height: 20,
                             lineBreak: false,
